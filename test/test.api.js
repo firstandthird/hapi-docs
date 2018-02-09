@@ -57,7 +57,7 @@ test('creates a json data object for each route', async (t) => {
     }
   });
   await server.start();
-  const response = await server.inject({ url: '/docs' });
+  const response = await server.inject({ url: '/docs.json' });
   t.deepEqual(response.result[0], {
     path: '/appian',
     method: 'get',
@@ -106,7 +106,7 @@ test('creates a json data object for each route', async (t) => {
   }, 'returns validation specs for POST payloads');
 
   t.deepEqual(response.result[2], {
-    path: '/docs',
+    path: '/docs.json',
     method: 'get'
   }, 'returns the docs route as well');
 
@@ -172,7 +172,7 @@ test('the "tags" query option will only return routes with the specified tag', a
     }
   });
   await server.start();
-  const response = await server.inject({ url: '/docs?tags=secure,api' });
+  const response = await server.inject({ url: '/docs.json?tags=secure,api' });
   t.deepEqual(response.result, [{
     path: '/appian',
     method: 'get',

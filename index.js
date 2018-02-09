@@ -37,7 +37,7 @@ const register = function(server, pluginOptions = {}) {
     memo.push(routeInfo);
     return memo;
   }, []).sort((a, b) => a.path > b.path); // routes will be sorted alphabetically
-  server.route({ method: 'get', path: options.docsPath, handler: (request, h) => documentRoutes(request.query) });
+  server.route({ method: 'get', path: `${options.docsPath}.json`, handler: (request, h) => documentRoutes(request.query) });
 };
 
 exports.plugin = {
