@@ -1,0 +1,37 @@
+{
+  "name": "hapi-api-docs",
+  "version": "0.0.1",
+  "description": "api plugin to document hapi routes",
+  "main": "index.js",
+  "scripts": {
+    "test": "eslint . && tap --cov test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/firstandthird/hapi-api-docs.git"
+  },
+  "keywords": [
+    "API",
+    "documents",
+    "hapi",
+    "documentation",
+    "hapi-api-docs"
+  ],
+  "author": "First+Third",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/firstandthird/hapi-api-docs/issues"
+  },
+  "homepage": "https://github.com/firstandthird/hapi-api-docs#readme",
+  "devDependencies": {
+    "eslint": "^4.15.0",
+    "eslint-config-firstandthird": "^4.3.0",
+    "eslint-plugin-import": "^2.8.0",
+    "tap": "^11.0.1"
+  },
+  "eslintConfig": {
+    "extends": "firstandthird"
+  },
+  "dependencies": {
+  }
+}
