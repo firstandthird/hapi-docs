@@ -78,7 +78,7 @@ test('creates a json data object for each route', async (t) => {
         },
       }
     }
-  }, 'handles simple routes');
+  }, 'return basic route info and validation specs for query');
 
   t.deepEqual(response.result[1], {
     path: '/appian',
@@ -103,7 +103,7 @@ test('creates a json data object for each route', async (t) => {
         }
       }
     }
-  }, 'handles POST and query payload');
+  }, 'returns validation specs for POST payloads');
 
   t.deepEqual(response.result[2], {
     path: '/docs',
