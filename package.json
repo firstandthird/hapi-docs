@@ -1,6 +1,6 @@
 {
   "name": "hapi-api-docs",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "api plugin to document hapi routes",
   "main": "index.js",
   "scripts": {
