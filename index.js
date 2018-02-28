@@ -17,7 +17,15 @@ const register = function(server, pluginOptions = {}) {
       method: route.method
     };
     // some other additional info that routes may or may not have:
+    // if there is a global auth then all routes by default use it:
+    if (server.auth.settings.default) {
+      routeInfo.auth = server.auth.settings.default;
+    }
+    // if there is a locally-configed auth show both local and overridden auth:
     if (route.settings.auth) {
+      if (routeInfo.auth) {
+        routeInfo.overriddenAuth = routeInfo.auth;
+      }
       routeInfo.auth = route.settings.auth;
     }
     if (route.settings.tags) {
