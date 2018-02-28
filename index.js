@@ -41,13 +41,18 @@ const register = function(server, pluginOptions = {}) {
         if (route.settings.notes) {
           routeInfo.notes = route.settings.notes;
         }
+        const routePluginInfo = route.settings.plugins['hapi-api-docs'] || {};
+        // if you need to manually validate inside the code of the route handler,
+        // you can still describe a validation schema for hapi-api-docs. Otherwise
+        // it will just try to include the one specified in config.validate:
+        const validationSpecs = routePluginInfo.validate || route.settings.validate;
         // validation specs will be returned for payload and query:
-        if (route.settings.validate) {
-          if (route.settings.validate.payload) {
-            routeInfo.payload = joi.describe(route.settings.validate.payload);
+        if (validationSpecs) {
+          if (validationSpecs.payload) {
+            routeInfo.payload = joi.describe(validationSpecs.payload);
           }
-          if (route.settings.validate.query) {
-            routeInfo.query = joi.describe(route.settings.validate.query);
+          if (validationSpecs.query) {
+            routeInfo.query = joi.describe(validationSpecs.query);
           }
         }
         memo.push(routeInfo);

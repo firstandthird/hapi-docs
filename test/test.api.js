@@ -325,3 +325,72 @@ test('documents both global and local auth configs', async (t) => {
   await server.stop();
   t.end();
 });
+
+test('takes in a custom validation', async (t) => {
+  const server = new Hapi.Server({
+    debug: {
+      request: ['error']
+    },
+    port: 8080
+  });
+  await server.register({
+    plugin: require('../'),
+    options: {}
+  });
+  server.route({
+    method: 'POST',
+    path: '/appian',
+    config: {
+      plugins: {
+        'hapi-api-docs': {
+          validate: {
+            payload: {
+              name: Joi.string().required(),
+              hash: Joi.string().required(),
+              id: Joi.string().required()
+            }
+          }
+        }
+      }
+    },
+    handler(request, h) {
+      return 'of the mack';
+    }
+  });
+  server.route({
+    method: 'POST',
+    path: '/autobahn',
+    config: {
+      plugins: {
+        'hapi-api-docs': {
+          validate: {
+            payload: {
+              pName: Joi.string().required(),
+              pHash: Joi.string().required(),
+              pid: Joi.string().required()
+            }
+          }
+        }
+      },
+      validate: {
+        payload: {
+          name: Joi.string().required(),
+          hash: Joi.string().required(),
+          id: Joi.string().required()
+        }
+      }
+    },
+    handler(request, h) {
+      return 'of the mack';
+    }
+  });
+  await server.start();
+  const response = await server.inject({ url: '/docs.json' });
+  t.isA(response.result[0].payload, 'object', 'includes manual validation schema');
+  t.deepEqual(
+    Object.keys(response.result[1].payload.children),
+    ['pName', 'pHash', 'pid'],
+    'manual schema overrides schema specified by config.validate');
+  await server.stop();
+  t.end();
+});
