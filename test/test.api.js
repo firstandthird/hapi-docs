@@ -190,6 +190,83 @@ test('the "tags" query option will only return routes with the specified tag', a
   t.end();
 });
 
+test('takes in a custom auth config', async (t) => {
+  let allowAuth = false;
+  const server = new Hapi.Server({
+    debug: {
+      request: ['error']
+    },
+    port: 8080
+  });
+  server.auth.scheme('custom', () => ({
+    authenticate(request, h) {
+      if (!allowAuth) {
+        return h.unauthenticated(require('boom').unauthorized('go away'));
+      }
+      return h.authenticated({ credentials: { user: 'tron' } });
+    }
+  }));
+  server.auth.strategy('default', 'custom');
+  await server.register({
+    plugin: require('../'),
+    options: {
+      auth: 'default'
+    }
+  });
+  server.route({
+    method: 'POST',
+    path: '/appian',
+    config: {
+      validate: {
+        payload: {
+          name: Joi.string().required(),
+          hash: Joi.string().required(),
+          id: Joi.string().required()
+        }
+      }
+    },
+    handler(request, h) {
+      return 'of the mack';
+    }
+  });
+  server.route({
+    method: 'GET',
+    path: '/khyber',
+    config: {
+      tags: ['secure'],
+      notes: 'connects Pakistan and Afghanistan'
+    },
+    handler(request, h) {
+      return 'of the jedi';
+    }
+  });
+  server.route({
+    method: 'GET',
+    path: '/appian',
+    config: {
+      validate: {
+        query: {
+          name: Joi.string(),
+          hash: Joi.string(),
+          id: Joi.string()
+        }
+      }
+    },
+    handler(request, h) {
+      return 'of the king';
+    }
+  });
+  await server.start();
+  const response = await server.inject({ url: '/docs.json' });
+  t.equal(response.statusCode, 401, 'does not allow unauthorized access');
+  allowAuth = true;
+  const response2 = await server.inject({ url: '/docs.json' });
+  t.equal(response2.statusCode, 200, 'allows authorized access');
+  t.equal(response2.result.length, 4, 'gets routes with auth');
+  await server.stop();
+  t.end();
+});
+
 test('documents both global and local auth configs', async (t) => {
   const server = new Hapi.Server({
     debug: {
