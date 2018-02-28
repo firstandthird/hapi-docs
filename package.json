@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/firstandthird/hapi-api-docs#readme",
   "devDependencies": {
+    "boom": "^7.1.1",
     "eslint": "^4.15.0",
     "eslint-config-firstandthird": "^4.3.0",
     "eslint-plugin-import": "^2.8.0",

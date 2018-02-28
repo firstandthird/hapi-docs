@@ -1,6 +1,7 @@
 const joi = require('joi');
 const defaults = {
-  docsPath: '/docs'
+  docsPath: '/docs',
+  auth: null
 };
 
 const register = function(server, pluginOptions = {}) {
@@ -37,7 +38,14 @@ const register = function(server, pluginOptions = {}) {
     memo.push(routeInfo);
     return memo;
   }, []).sort((a, b) => a.path > b.path); // routes will be sorted alphabetically
-  server.route({ method: 'get', path: `${options.docsPath}.json`, handler: (request, h) => documentRoutes(request.query) });
+  server.route({
+    method: 'get',
+    config: {
+      auth: options.auth
+    },
+    path: `${options.docsPath}.json`,
+    handler: (request, h) => documentRoutes(request.query)
+  });
 };
 
 exports.plugin = {
