@@ -189,3 +189,62 @@ test('the "tags" query option will only return routes with the specified tag', a
   await server.stop();
   t.end();
 });
+
+test('documents both global and local auth configs', async (t) => {
+  const server = new Hapi.Server({
+    debug: {
+      request: ['error']
+    },
+    port: 8080
+  });
+  await server.register({
+    plugin: require('../'),
+    options: {}
+  });
+  server.auth.scheme('theDefaultScheme', () => ({
+    authenticate(request, h) {
+      return h.authenticated({ credentials: { user: 'tron' } });
+    }
+  }));
+  server.auth.strategy('default', 'theDefaultScheme');
+  server.auth.default('default');
+  server.auth.scheme('theLocalScheme', () => ({
+    authenticate(request, h) {
+      return h.authenticated({ credentials: { user: 'tron' } });
+    }
+  }));
+  server.auth.strategy('local', 'theLocalScheme');
+  server.route({
+    method: 'POST',
+    path: '/appian',
+    config: {
+      auth: 'local'
+    },
+    handler(request, h) {
+      return 'of the mack';
+    }
+  });
+  server.route({
+    method: 'GET',
+    path: '/appian',
+    config: {
+      validate: {
+        query: {
+          name: Joi.string(),
+          hash: Joi.string(),
+          id: Joi.string()
+        }
+      }
+    },
+    handler(request, h) {
+      return 'of the king';
+    }
+  });
+  await server.start();
+  const response = await server.inject({ url: '/docs.json' });
+  t.equal(response.statusCode, 200, 'allows authorized access');
+  t.equal(response.result[0].auth.strategies[0], 'default', 'routes decorates with default strat');
+  t.equal(response.result[1].auth.strategies[0], 'local', 'routes decorates with default strat');
+  await server.stop();
+  t.end();
+});
