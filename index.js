@@ -4,8 +4,46 @@ const defaults = {
   auth: null
 };
 
+
 const register = function(server, pluginOptions = {}) {
   const options = Object.assign({}, defaults, pluginOptions);
+
+  const registerAll = (current, subObj, subObjName) => {
+    Object.keys(subObj).forEach(methodName => {
+      const method = subObj[methodName];
+      if (subObjName) {
+        methodName = `${subObjName}.${methodName}`;
+      }
+      if (typeof method === 'function') {
+        const methodDescription = { name: methodName };
+        if (method.description) {
+          methodDescription.description = method.description;
+        }
+        if (method.schema) {
+          methodDescription.schema = joi.describe(method.schema);
+        }
+        return current.push(methodDescription);
+      }
+      if (typeof method === 'object') {
+        // otherwise method is an object:
+        registerAll(current, method, methodName);
+      }
+    });
+  };
+
+  server.decorate('server', 'docs', {
+    methods() {
+      const allMethods = [];
+      registerAll(allMethods, server.methods);
+      allMethods.sort((a, b) => {
+        if (a.name < b.name) { return -1; }
+        if (a.name > b.name) { return 1; }
+        return 0;
+      });
+      return allMethods;
+    }
+  });
+
   server.route({
     method: 'get',
     path: `${options.docsPath}.json`,

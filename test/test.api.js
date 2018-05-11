@@ -394,3 +394,75 @@ test('takes in a custom validation', async (t) => {
   await server.stop();
   t.end();
 });
+
+test('creates a json data object for each route', async (t) => {
+  const server = new Hapi.Server({
+    debug: {
+      request: ['error']
+    },
+    port: 8080
+  });
+  await server.register({
+    plugin: require('../'),
+    options: {}
+  });
+  server.methods.topLevel = () => { 'hi there'; };
+  server.methods.nestedLevel = {
+    func1() { 'hi there'; },
+    func2() { 'hi there'; },
+    secondLevel: {
+      func1() { 'hi there'; },
+      func2() { 'hi there'; }
+    }
+  };
+  const annotated = function func3() {
+    return 'scheme';
+  };
+  annotated.schema = {
+    payload: {
+      name: Joi.string().required(),
+      hash: Joi.string().required(),
+      id: Joi.string().required()
+    }
+  };
+  annotated.description = 'A function that has some annotations';
+  server.method('func3', annotated);
+  const methods = server.docs.methods();
+  t.match(methods, [
+    {
+      name: 'func3',
+      description: 'A function that has some annotations',
+      schema: {
+        type: 'object',
+        children: {
+          payload: {
+            type: 'object',
+            children: {
+              name: {
+                type: 'string',
+                flags: { presence: 'required' },
+                invalids: ['']
+              },
+              hash: {
+                type: 'string',
+                flags: { presence: 'required' },
+                invalids: ['']
+              },
+              id: {
+                type: 'string',
+                flags: { presence: 'required' },
+                invalids: ['']
+              },
+            }
+          }
+        }
+      }
+    },
+    { name: 'nestedLevel.func1' },
+    { name: 'nestedLevel.func2' },
+    { name: 'nestedLevel.secondLevel.func1' },
+    { name: 'nestedLevel.secondLevel.func2' },
+    { name: 'topLevel' }
+  ]);
+  t.end();
+});
