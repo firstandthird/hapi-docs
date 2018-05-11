@@ -1,11 +1,23 @@
 const joi = require('joi');
+const registerAll = require('./lib/methods');
 const defaults = {
   docsPath: '/docs',
   auth: null
 };
 
+
 const register = function(server, pluginOptions = {}) {
   const options = Object.assign({}, defaults, pluginOptions);
+
+
+  server.decorate('server', 'docs', {
+    methods() {
+      const allMethods = [];
+      registerAll(allMethods, server.methods);
+      return allMethods;
+    }
+  });
+
   server.route({
     method: 'get',
     path: `${options.docsPath}.json`,
