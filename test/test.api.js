@@ -395,7 +395,7 @@ test('takes in a custom validation', async (t) => {
   t.end();
 });
 
-test('creates a json data object for each route', async (t) => {
+test('server.docs.methods() returns list of methods', async (t) => {
   const server = new Hapi.Server({
     debug: {
       request: ['error']
@@ -406,15 +406,11 @@ test('creates a json data object for each route', async (t) => {
     plugin: require('../'),
     options: {}
   });
-  server.methods.topLevel = () => { 'hi there'; };
-  server.methods.nestedLevel = {
-    func1() { 'hi there'; },
-    func2() { 'hi there'; },
-    secondLevel: {
-      func1() { 'hi there'; },
-      func2() { 'hi there'; }
-    }
-  };
+  server.method('topLevel', () => { 'hi there'; });
+  server.method('nestedLevel.func1', () => { 'hi there'; });
+  server.method('nestedLevel.func2', () => { 'hi there'; });
+  server.method('nestedLevel.secondLevel.func1', () => { 'hi there'; });
+  server.method('nestedLevel.secondLevel.func2', () => { 'hi there'; });
   const annotated = function func3() {
     return 'scheme';
   };
