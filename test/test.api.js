@@ -373,3 +373,21 @@ test('server.docs.methods() returns list of methods', async (t) => {
   ]);
   t.end();
 });
+
+test('server.docs.methods() returns list of methods', async (t) => {
+  const server = new Hapi.Server({
+    debug: {
+      request: ['error']
+    },
+    port: 8080
+  });
+  await server.register({
+    plugin: require('../'),
+    options: {}
+  });
+  server.method('topLevel', () => { 'hi there'; });
+  server.method('sum', () => { 'hi there'; }, { cache: { expiresIn: 2000, generateTimeout: 100 } });
+  const methods = server.docs.methods();
+  t.match(methods, [{ name: 'sum', cacheEnabled: true }, { name: 'topLevel' }]);
+  t.end();
+});
