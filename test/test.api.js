@@ -1,6 +1,8 @@
 const test = require('tap').test;
 const Hapi = require('hapi');
 const Joi = require('joi');
+const fs = require('fs');
+const path = require('path');
 
 test('creates a json data object for each route', async (t) => {
   const server = new Hapi.Server({
@@ -389,5 +391,101 @@ test('server.docs.methods() returns list of methods', async (t) => {
   server.method('sum', () => { 'hi there'; }, { cache: { expiresIn: 2000, generateTimeout: 100 } });
   const methods = server.docs.methods();
   t.match(methods, [{ name: 'sum', cacheEnabled: true }, { name: 'topLevel' }]);
+  t.end();
+});
+
+test('server.docs.html() returns html table of both routes and methods', async (t) => {
+  const server = new Hapi.Server({
+    debug: {
+      request: ['error']
+    },
+    port: 8080
+  });
+  await server.register({
+    plugin: require('../'),
+    options: {}
+  });
+  const topLevel = () => { 'hi there'; };
+  topLevel.description = 'a method';
+  server.method('topLevel', topLevel);
+  server.method('sum', () => { 'hi there'; }, { cache: { expiresIn: 2000, generateTimeout: 100 } });
+  server.route({
+    method: 'POST',
+    path: '/appian',
+    config: {
+      validate: {
+        payload: {
+          name: Joi.string().required(),
+          hash: Joi.string().required(),
+          id: Joi.string().required()
+        }
+      }
+    },
+    handler(request, h) {
+      return 'of the king';
+    }
+  });
+  server.route({
+    method: 'GET',
+    path: '/khyber',
+    config: {
+      tags: ['secure'],
+      notes: 'connects Pakistan and Afghanistan'
+    },
+    handler(request, h) {
+      return 'of the jedi';
+    }
+  });
+  const html = server.docs.html();
+  t.match(html, fs.readFileSync(path.join(__dirname, 'table.html'), 'utf-8'));
+  t.end();
+});
+
+test('options.docsEndpoint will create an endpoint for accessing server.docs.html()', async (t) => {
+  const server = new Hapi.Server({
+    debug: {
+      request: ['error']
+    },
+    port: 8080
+  });
+  await server.register({
+    plugin: require('../'),
+    options: {
+      docsEndpoint: '/docsEndpoint'
+    }
+  });
+  const topLevel = () => { 'hi there'; };
+  topLevel.description = 'a method';
+  server.method('topLevel', topLevel);
+  server.method('sum', () => { 'hi there'; }, { cache: { expiresIn: 2000, generateTimeout: 100 } });
+  server.route({
+    method: 'POST',
+    path: '/appian',
+    config: {
+      validate: {
+        payload: {
+          name: Joi.string().required(),
+          hash: Joi.string().required(),
+          id: Joi.string().required()
+        }
+      }
+    },
+    handler(request, h) {
+      return 'of the jedi';
+    }
+  });
+  server.route({
+    method: 'GET',
+    path: '/khyber',
+    config: {
+      tags: ['secure'],
+      notes: 'connects Pakistan and Afghanistan'
+    },
+    handler(request, h) {
+      return 'of the jedi';
+    }
+  });
+  const html = await server.inject({ method: 'get', url: '/docsEndpoint' });
+  t.match(html.result, fs.readFileSync(path.join(__dirname, 'table.html'), 'utf-8'));
   t.end();
 });
