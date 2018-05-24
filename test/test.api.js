@@ -489,3 +489,54 @@ test('options.docsEndpoint will create an endpoint for accessing server.docs.htm
   t.match(html.result, fs.readFileSync(path.join(__dirname, 'table.html'), 'utf-8'));
   t.end();
 });
+
+test('html endpoint can also filter by tag', async (t) => {
+  const server = new Hapi.Server({
+    debug: {
+      request: ['error']
+    },
+    port: 8080
+  });
+  await server.register({
+    plugin: require('../'),
+    options: {
+      docsEndpoint: '/docsEndpoint'
+    }
+  });
+  const topLevel = () => { 'hi there'; };
+  topLevel.description = 'a method';
+  server.method('topLevel', topLevel);
+  server.method('sum', () => { 'hi there'; }, { cache: { expiresIn: 2000, generateTimeout: 100 } });
+  server.route({
+    method: 'POST',
+    path: '/appian',
+    config: {
+      tags: ['secure'],
+      validate: {
+        payload: {
+          name: Joi.string().required(),
+          hash: Joi.string().required(),
+          id: Joi.string().required()
+        }
+      }
+    },
+    handler(request, h) {
+      return 'of the jedi';
+    }
+  });
+  server.route({
+    method: 'GET',
+    path: '/khyber',
+    config: {
+      tags: ['secure'],
+      notes: 'connects Pakistan and Afghanistan'
+    },
+    handler(request, h) {
+      return 'of the jedi';
+    }
+  });
+  const html = await server.inject({ method: 'get', url: '/docsEndpoint?tags=secure,blah' });
+  fs.writeFileSync(path.join(__dirname, 'table2.html'), html.result, 'utf-8');
+  t.match(html.result, fs.readFileSync(path.join(__dirname, 'table2.html'), 'utf-8'));
+  t.end();
+});

@@ -10,14 +10,15 @@ const register = function(server, pluginOptions = {}) {
       return allMethods;
     },
     routes(options) { return routes(server, Object.assign({}, pluginOptions, options)); },
-    html() { return html(server.docs.methods(), server.docs.routes()); }
+    html(options = {}) { return html(server.docs.methods(), server.docs.routes(options)); }
   });
   if (pluginOptions.docsEndpoint) {
     server.route({
       method: 'get',
       path: pluginOptions.docsEndpoint,
       handler(request, h) {
-        return server.docs.html();
+        const options = request.query.tags ? { tags: request.query.tags } : {};
+        return server.docs.html(options);
       }
     });
   }
