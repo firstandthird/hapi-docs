@@ -536,7 +536,6 @@ test('html endpoint can also filter by tag', async (t) => {
     }
   });
   const html = await server.inject({ method: 'get', url: '/docsEndpoint?tags=secure,blah' });
-  fs.writeFileSync(path.join(__dirname, 'table2.html'), html.result, 'utf-8');
   t.match(html.result, fs.readFileSync(path.join(__dirname, 'table2.html'), 'utf-8'));
   t.end();
 });
