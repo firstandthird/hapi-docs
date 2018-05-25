@@ -511,7 +511,6 @@ test('html endpoint can also filter by tag', async (t) => {
     method: 'POST',
     path: '/appian',
     config: {
-      tags: ['secure'],
       validate: {
         payload: {
           name: Joi.string().required(),
