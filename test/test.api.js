@@ -394,7 +394,8 @@ test('server.docs.methods() returns list of methods', async (t) => {
   t.end();
 });
 
-test('server.docs.html() returns html table of both routes and methods', async (t) => {
+
+test('also provides list of all the registered event strategies', async (t) => {
   const server = new Hapi.Server({
     debug: {
       request: ['error']
@@ -405,89 +406,19 @@ test('server.docs.html() returns html table of both routes and methods', async (
     plugin: require('../'),
     options: {}
   });
-  const topLevel = () => { 'hi there'; };
-  topLevel.description = 'a method';
-  server.method('topLevel', topLevel);
-  server.method('sum', () => { 'hi there'; }, { cache: { expiresIn: 2000, generateTimeout: 100 } });
-  server.route({
-    method: 'POST',
-    path: '/appian',
-    config: {
-      validate: {
-        payload: {
-          name: Joi.string().required(),
-          hash: Joi.string().required(),
-          id: Joi.string().required()
-        }
-      }
-    },
-    handler(request, h) {
-      return 'of the king';
-    }
+  const foo1 = () => {};
+  const foo2 = () => {};
+  server.events.on('log', foo1);
+  server.events.on('log', foo2);
+  server.events.on('route', foo2);
+  server.events.on('response', () => {});
+  const events = server.docs.events();
+  t.match(events, {
+    log: ['foo1', 'foo2'],
+    request: ['debug'],
+    response: ['(anonymous)'],
+    route: ['foo2']
   });
-  server.route({
-    method: 'GET',
-    path: '/khyber',
-    config: {
-      tags: ['secure'],
-      notes: 'connects Pakistan and Afghanistan'
-    },
-    handler(request, h) {
-      return 'of the jedi';
-    }
-  });
-  const html = server.docs.html();
-  t.match(html, fs.readFileSync(path.join(__dirname, 'table.html'), 'utf-8'));
-  t.end();
-});
-
-test('options.docsEndpoint will create an endpoint for accessing server.docs.html()', async (t) => {
-  const server = new Hapi.Server({
-    debug: {
-      request: ['error']
-    },
-    port: 8080
-  });
-  await server.register({
-    plugin: require('../'),
-    options: {
-      docsEndpoint: '/docsEndpoint'
-    }
-  });
-  const topLevel = () => { 'hi there'; };
-  topLevel.description = 'a method';
-  server.method('topLevel', topLevel);
-  server.method('sum', () => { 'hi there'; }, { cache: { expiresIn: 2000, generateTimeout: 100 } });
-  server.route({
-    method: 'POST',
-    path: '/appian',
-    config: {
-      validate: {
-        payload: {
-          name: Joi.string().required(),
-          hash: Joi.string().required(),
-          id: Joi.string().required()
-        }
-      }
-    },
-    handler(request, h) {
-      return 'of the jedi';
-    }
-  });
-  server.route({
-    method: 'GET',
-    path: '/khyber',
-    config: {
-      tags: ['secure'],
-      notes: 'connects Pakistan and Afghanistan'
-    },
-    handler(request, h) {
-      return 'of the jedi';
-    }
-  });
-  const html = await server.inject({ method: 'get', url: '/docsEndpoint' });
-  t.match(html.result, fs.readFileSync(path.join(__dirname, 'table.html'), 'utf-8'));
-  t.end();
 });
 
 test('also provides list of all the auth strategies', async (t) => {
@@ -553,5 +484,141 @@ test('also provides list of all the auth strategies', async (t) => {
   const routes = server.docs.routes();
   const result = server.docs.auth(routes);
   t.match(result, ['local', 'default']);
+  t.end();
+});
+
+test('server.docs.html() returns html table of both routes and methods', async (t) => {
+  const server = new Hapi.Server({
+    debug: {
+      request: ['error']
+    },
+    port: 8080
+  });
+  await server.register({
+    plugin: require('../'),
+    options: {}
+  });
+  const topLevel = () => { 'hi there'; };
+  topLevel.description = 'a method';
+  server.method('topLevel', topLevel);
+  server.method('sum', () => { 'hi there'; }, { cache: { expiresIn: 2000, generateTimeout: 100 } });
+  server.auth.scheme('theDefaultScheme', () => ({
+    authenticate(request, h) {
+      return h.authenticated({ credentials: { user: 'tron' } });
+    }
+  }));
+  server.auth.strategy('default', 'theDefaultScheme');
+  server.auth.default('default');
+  server.auth.scheme('theLocalScheme', () => ({
+    authenticate(request, h) {
+      return h.authenticated({ credentials: { user: 'tron' } });
+    }
+  }));
+  server.auth.strategy('local', 'theLocalScheme');
+  server.route({
+    method: 'POST',
+    path: '/appian',
+    config: {
+      auth: 'local',
+      validate: {
+        payload: {
+          name: Joi.string().required(),
+          hash: Joi.string().required(),
+          id: Joi.string().required()
+        }
+      }
+    },
+    handler(request, h) {
+      return 'of the king';
+    }
+  });
+  server.route({
+    method: 'GET',
+    path: '/khyber',
+    config: {
+      tags: ['secure'],
+      notes: 'connects Pakistan and Afghanistan'
+    },
+    handler(request, h) {
+      return 'of the jedi';
+    }
+  });
+  const foo1 = () => {};
+  const foo2 = () => {};
+  server.events.on('log', foo1);
+  server.events.on('log', foo2);
+  server.events.on('route', foo2);
+  server.events.on('response', () => {});
+  const html = server.docs.html();
+  t.match(html, fs.readFileSync(path.join(__dirname, 'table.html'), 'utf-8'));
+  t.end();
+});
+
+test('options.docsEndpoint will create an endpoint for accessing server.docs.html()', async (t) => {
+  const server = new Hapi.Server({
+    debug: {
+      request: ['error']
+    },
+    port: 8080
+  });
+  await server.register({
+    plugin: require('../'),
+    options: {
+      docsEndpoint: '/docsEndpoint'
+    }
+  });
+  const topLevel = () => { 'hi there'; };
+  topLevel.description = 'a method';
+  server.method('topLevel', topLevel);
+  server.method('sum', () => { 'hi there'; }, { cache: { expiresIn: 2000, generateTimeout: 100 } });
+  server.auth.scheme('theDefaultScheme', () => ({
+    authenticate(request, h) {
+      return h.authenticated({ credentials: { user: 'tron' } });
+    }
+  }));
+  server.auth.strategy('default', 'theDefaultScheme');
+  server.auth.default('default');
+  server.auth.scheme('theLocalScheme', () => ({
+    authenticate(request, h) {
+      return h.authenticated({ credentials: { user: 'tron' } });
+    }
+  }));
+  server.auth.strategy('local', 'theLocalScheme');
+  server.route({
+    method: 'POST',
+    path: '/appian',
+    config: {
+      auth: 'local',
+      validate: {
+        payload: {
+          name: Joi.string().required(),
+          hash: Joi.string().required(),
+          id: Joi.string().required()
+        }
+      }
+    },
+    handler(request, h) {
+      return 'of the jedi';
+    }
+  });
+  server.route({
+    method: 'GET',
+    path: '/khyber',
+    config: {
+      tags: ['secure'],
+      notes: 'connects Pakistan and Afghanistan'
+    },
+    handler(request, h) {
+      return 'of the jedi';
+    }
+  });
+  const foo1 = () => {};
+  const foo2 = () => {};
+  server.events.on('log', foo1);
+  server.events.on('log', foo2);
+  server.events.on('route', foo2);
+  server.events.on('response', () => {});
+  const html = await server.inject({ method: 'get', url: '/docsEndpoint' });
+  t.match(html.result, fs.readFileSync(path.join(__dirname, 'table.html'), 'utf-8'));
   t.end();
 });

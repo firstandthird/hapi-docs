@@ -29,14 +29,24 @@
           <td>/appian</td>
           <td>post</td>
           <td></td>
-          <td></td>
+          <td>{
+  "strategies": [
+    "local"
+  ],
+  "mode": "required"
+}</td>
           <td></td>
       
         <tr>
           <td>/khyber</td>
           <td>get</td>
           <td>connects Pakistan and Afghanistan</td>
-          <td></td>
+          <td>{
+  "strategies": [
+    "default"
+  ],
+  "mode": "required"
+}</td>
           <td>secure</td>
       
       <tr>
@@ -62,3 +72,43 @@
       
       <tr>
     </table>
+    <div style="float: right"><a href="#routes">Routes</a> | <a href="#methods">Methods</a></div>
+    <h1 id="events">Registered Events</h1>
+    <table>
+      <tr>
+        <th>Event Name</th>
+        <th>Event Handlers</th>
+      </tr>
+      
+        <tr>
+          <td>log</td>
+          <td>foo1, foo2</td>
+      
+        <tr>
+          <td>request</td>
+          <td>debug</td>
+      
+        <tr>
+          <td>response</td>
+          <td>(anonymous)</td>
+      
+        <tr>
+          <td>route</td>
+          <td>foo2</td>
+      
+    </table>
+    <div style="float: right"><a href="#routes">Routes</a> | <a href="#methods">Methods</a></div>
+    <h1 id="strategies">Registered Strategies</h1>
+    <table>
+      <tr>
+        <th>Strategy Name</th>
+      </tr>
+      
+        <tr>
+          <td>local</td>
+      
+        <tr>
+          <td>default</td>
+      
+    </table>
+
