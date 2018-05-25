@@ -4,6 +4,18 @@ const html = require('./lib/html');
 
 const register = function(server, pluginOptions = {}) {
   server.decorate('server', 'docs', {
+    auth(routeList) {
+      return routeList.reduce((memo, item) => {
+        if (item.auth && item.auth.strategies) {
+          item.auth.strategies.forEach(strat => {
+            if (!memo.includes(strat)) {
+              memo.push(strat);
+            }
+          });
+        }
+        return memo;
+      }, []);
+    },
     methods() {
       const allMethods = [];
       registerAll(allMethods, server.methods);

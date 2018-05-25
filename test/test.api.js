@@ -489,3 +489,69 @@ test('options.docsEndpoint will create an endpoint for accessing server.docs.htm
   t.match(html.result, fs.readFileSync(path.join(__dirname, 'table.html'), 'utf-8'));
   t.end();
 });
+
+test('also provides list of all the auth strategies', async (t) => {
+  const server = new Hapi.Server({
+    debug: {
+      request: ['error']
+    },
+    port: 8080
+  });
+  await server.register({
+    plugin: require('../'),
+    options: {}
+  });
+  server.auth.scheme('theDefaultScheme', () => ({
+    authenticate(request, h) {
+      return h.authenticated({ credentials: { user: 'tron' } });
+    }
+  }));
+  server.auth.strategy('default', 'theDefaultScheme');
+  server.auth.default('default');
+  server.auth.scheme('theLocalScheme', () => ({
+    authenticate(request, h) {
+      return h.authenticated({ credentials: { user: 'tron' } });
+    }
+  }));
+  server.auth.strategy('local', 'theLocalScheme');
+  server.route({
+    method: 'POST',
+    path: '/appian',
+    config: {
+      auth: 'local'
+    },
+    handler(request, h) {
+      return 'of the jedi';
+    }
+  });
+  server.route({
+    method: 'POST',
+    path: '/silkroad',
+    config: {
+      auth: 'local'
+    },
+    handler(request, h) {
+      return 'to the planet of the apes';
+    }
+  });
+  server.route({
+    method: 'GET',
+    path: '/appian',
+    config: {
+      validate: {
+        query: {
+          name: Joi.string(),
+          hash: Joi.string(),
+          id: Joi.string()
+        }
+      }
+    },
+    handler(request, h) {
+      return 'of the king';
+    }
+  });
+  const routes = server.docs.routes();
+  const result = server.docs.auth(routes);
+  t.match(result, ['local', 'default']);
+  t.end();
+});
