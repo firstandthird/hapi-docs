@@ -394,7 +394,6 @@ test('server.docs.methods() returns list of methods', async (t) => {
   t.end();
 });
 
-
 test('also provides list of all the registered event strategies', async (t) => {
   const server = new Hapi.Server({
     debug: {
