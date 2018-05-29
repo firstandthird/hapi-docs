@@ -48,6 +48,15 @@ const register = function(server, pluginOptions = {}) {
       }
     });
   }
+  if (pluginOptions.docsEndpointAuth) {
+    server.route({
+      method: 'get',
+      path: pluginOptions.docsEndpointAuth,
+      handler(request, h) {
+        return server.docs.auth(server.docs.routes());
+      }
+    });
+  }
 };
 
 exports.plugin = {
