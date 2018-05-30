@@ -3,6 +3,7 @@ const Hapi = require('hapi');
 const Joi = require('joi');
 const fs = require('fs');
 const path = require('path');
+const boom = require('boom');
 
 test('creates a json data object for each route', async (t) => {
   const server = new Hapi.Server({
@@ -486,73 +487,6 @@ test('also provides list of all the auth strategies', async (t) => {
   t.end();
 });
 
-test('will provide auth list at docsEndpointAuth if it is provided', async (t) => {
-  const server = new Hapi.Server({
-    debug: {
-      request: ['error']
-    },
-    port: 8080
-  });
-  await server.register({
-    plugin: require('../'),
-    options: {
-      docsEndpointAuth: '/docsEndpointAuth'
-    }
-  });
-  server.auth.scheme('theDefaultScheme', () => ({
-    authenticate(request, h) {
-      return h.authenticated({ credentials: { user: 'tron' } });
-    }
-  }));
-  server.auth.strategy('default', 'theDefaultScheme');
-  server.auth.default('default');
-  server.auth.scheme('theLocalScheme', () => ({
-    authenticate(request, h) {
-      return h.authenticated({ credentials: { user: 'tron' } });
-    }
-  }));
-  server.auth.strategy('local', 'theLocalScheme');
-  server.route({
-    method: 'POST',
-    path: '/appian',
-    config: {
-      auth: 'local'
-    },
-    handler(request, h) {
-      return 'of the jedi';
-    }
-  });
-  server.route({
-    method: 'POST',
-    path: '/silkroad',
-    config: {
-      auth: 'local'
-    },
-    handler(request, h) {
-      return 'to the planet of the apes';
-    }
-  });
-  server.route({
-    method: 'GET',
-    path: '/appian',
-    config: {
-      validate: {
-        query: {
-          name: Joi.string(),
-          hash: Joi.string(),
-          id: Joi.string()
-        }
-      }
-    },
-    handler(request, h) {
-      return 'of the king';
-    }
-  });
-  const response = await server.inject({ method: 'get', url: '/docsEndpointAuth' });
-  t.match(response.result, ['default', 'local']);
-  t.end();
-});
-
 test('server.docs.html() returns html table of both routes and methods', async (t) => {
   const server = new Hapi.Server({
     debug: {
@@ -686,5 +620,39 @@ test('options.docsEndpoint will create an endpoint for accessing server.docs.htm
   server.events.on('response', () => {});
   const html = await server.inject({ method: 'get', url: '/docsEndpoint' });
   t.match(html.result, fs.readFileSync(path.join(__dirname, 'table.html'), 'utf-8'));
+  t.end();
+});
+
+test('will config endpoint if docsEndpointConfig is provided', async (t) => {
+  const server = new Hapi.Server({
+    debug: {
+      request: ['error']
+    },
+    port: 8080
+  });
+  server.auth.scheme('theLocalScheme', () => ({
+    authenticate(request, h) {
+      throw boom.unauthorized();
+    }
+  }));
+  server.auth.strategy('local', 'theLocalScheme');
+  await server.register({
+    plugin: require('../'),
+    options: {
+      docsEndpoint: '/docsEndpoint',
+      docsEndpointConfig: {
+        auth: 'local'
+      }
+    }
+  });
+  server.route({
+    method: 'POST',
+    path: '/appian',
+    handler(request, h) {
+      return request.auth;
+    }
+  });
+  const response = await server.inject({ method: 'get', url: '/docsEndpoint' });
+  t.equal(response.statusCode, 401, 'strategy blocks access');
   t.end();
 });
