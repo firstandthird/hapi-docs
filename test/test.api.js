@@ -556,7 +556,7 @@ test('server.docs.html() returns html table of both routes and methods', async (
   server.events.on('route', foo2);
   server.events.on('response', () => {});
   const html = server.docs.html();
-  t.match(html, fs.readFileSync(path.join(__dirname, 'table.html'), 'utf-8'));
+  t.match(html, fs.readFileSync(path.join(__dirname, 'tableA.html'), 'utf-8'));
   t.end();
 });
 
@@ -666,5 +666,54 @@ test('will config endpoint if docsEndpointConfig is provided', async (t) => {
   });
   const response = await server.inject({ method: 'get', url: '/docsEndpoint' });
   t.equal(response.statusCode, 401, 'strategy blocks access');
+  t.end();
+});
+
+test('html endpoint can also filter by tag', async (t) => {
+  const server = new Hapi.Server({
+    debug: {
+      request: ['error']
+    },
+    port: 8080
+  });
+  await server.register({
+    plugin: require('../'),
+    options: {
+      docsEndpoint: '/docsEndpoint'
+    }
+  });
+  const topLevel = () => { 'hi there'; };
+  topLevel.description = 'a method';
+  server.method('topLevel', topLevel);
+  server.method('sum', () => { 'hi there'; }, { cache: { expiresIn: 2000, generateTimeout: 100 } });
+  server.route({
+    method: 'POST',
+    path: '/appian',
+    config: {
+      validate: {
+        payload: {
+          name: Joi.string().required(),
+          hash: Joi.string().required(),
+          id: Joi.string().required()
+        }
+      }
+    },
+    handler(request, h) {
+      return 'of the jedi';
+    }
+  });
+  server.route({
+    method: 'GET',
+    path: '/khyber',
+    config: {
+      tags: ['secure'],
+      notes: 'connects Pakistan and Afghanistan'
+    },
+    handler(request, h) {
+      return 'of the jedi';
+    }
+  });
+  const html = await server.inject({ method: 'get', url: '/docsEndpoint?tags=secure,blah' });
+  t.match(html.result, fs.readFileSync(path.join(__dirname, 'table2.html'), 'utf-8'));
   t.end();
 });

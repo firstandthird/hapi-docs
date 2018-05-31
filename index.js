@@ -34,9 +34,9 @@ const register = function(server, pluginOptions = {}) {
       return allMethods;
     },
     routes(options) { return routes(server, Object.assign({}, pluginOptions, options)); },
-    html() {
-      const routeList = server.docs.routes();
-      return html(server.docs.methods(), routeList, server.docs.auth(routeList), server.docs.events());
+    html(options = {}) {
+      const routeList = server.docs.routes(options);
+      return html(server.docs.methods(), routeList, server.docs.auth(routeList), server.docs.events(), pluginOptions);
     }
   });
   if (pluginOptions.docsEndpoint) {
@@ -44,7 +44,8 @@ const register = function(server, pluginOptions = {}) {
       method: 'get',
       path: pluginOptions.docsEndpoint,
       handler(request, h) {
-        return server.docs.html();
+        const options = request.query.tags ? { tags: request.query.tags } : {};
+        return server.docs.html(options);
       }
     };
     if (pluginOptions.docsEndpointConfig) {
