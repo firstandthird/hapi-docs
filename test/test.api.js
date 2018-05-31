@@ -556,7 +556,7 @@ test('server.docs.html() returns html table of both routes and methods', async (
   server.events.on('route', foo2);
   server.events.on('response', () => {});
   const html = server.docs.html();
-  t.match(html, fs.readFileSync(path.join(__dirname, 'table.html'), 'utf-8'));
+  t.match(html, fs.readFileSync(path.join(__dirname, 'tableA.html'), 'utf-8'));
   t.end();
 });
 

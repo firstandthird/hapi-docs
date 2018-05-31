@@ -36,7 +36,7 @@ const register = function(server, pluginOptions = {}) {
     routes(options) { return routes(server, Object.assign({}, pluginOptions, options)); },
     html(options = {}) {
       const routeList = server.docs.routes(options);
-      return html(server.docs.methods(), routeList, server.docs.auth(routeList), server.docs.events());
+      return html(server.docs.methods(), routeList, server.docs.auth(routeList), server.docs.events(), pluginOptions);
     }
   });
   if (pluginOptions.docsEndpoint) {
