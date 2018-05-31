@@ -40,13 +40,17 @@ const register = function(server, pluginOptions = {}) {
     }
   });
   if (pluginOptions.docsEndpoint) {
-    server.route({
+    const routeConfig = {
       method: 'get',
       path: pluginOptions.docsEndpoint,
       handler(request, h) {
         return server.docs.html();
       }
-    });
+    };
+    if (pluginOptions.docsEndpointConfig) {
+      routeConfig.config = pluginOptions.docsEndpointConfig;
+    }
+    server.route(routeConfig);
   }
 };
 
