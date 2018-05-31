@@ -3,6 +3,7 @@ const Hapi = require('hapi');
 const Joi = require('joi');
 const fs = require('fs');
 const path = require('path');
+const boom = require('boom');
 
 test('creates a json data object for each route', async (t) => {
   const server = new Hapi.Server({
@@ -499,6 +500,9 @@ test('server.docs.html() returns html table of both routes and methods', async (
   });
   const topLevel = () => { 'hi there'; };
   topLevel.description = 'a method';
+  topLevel.schema = Joi.object({
+    param1: Joi.string().required()
+  });
   server.method('topLevel', topLevel);
   server.method('sum', () => { 'hi there'; }, { cache: { expiresIn: 2000, generateTimeout: 100 } });
   server.auth.scheme('theDefaultScheme', () => ({
@@ -520,6 +524,9 @@ test('server.docs.html() returns html table of both routes and methods', async (
     config: {
       auth: 'local',
       validate: {
+        query: {
+          tag: Joi.string().required()
+        },
         payload: {
           name: Joi.string().required(),
           hash: Joi.string().required(),
@@ -568,6 +575,9 @@ test('options.docsEndpoint will create an endpoint for accessing server.docs.htm
   });
   const topLevel = () => { 'hi there'; };
   topLevel.description = 'a method';
+  topLevel.schema = Joi.object({
+    param1: Joi.string().required()
+  });
   server.method('topLevel', topLevel);
   server.method('sum', () => { 'hi there'; }, { cache: { expiresIn: 2000, generateTimeout: 100 } });
   server.auth.scheme('theDefaultScheme', () => ({
@@ -589,6 +599,9 @@ test('options.docsEndpoint will create an endpoint for accessing server.docs.htm
     config: {
       auth: 'local',
       validate: {
+        query: {
+          tag: Joi.string().required()
+        },
         payload: {
           name: Joi.string().required(),
           hash: Joi.string().required(),
@@ -619,6 +632,40 @@ test('options.docsEndpoint will create an endpoint for accessing server.docs.htm
   server.events.on('response', () => {});
   const html = await server.inject({ method: 'get', url: '/docsEndpoint' });
   t.match(html.result, fs.readFileSync(path.join(__dirname, 'table.html'), 'utf-8'));
+  t.end();
+});
+
+test('will config endpoint if docsEndpointConfig is provided', async (t) => {
+  const server = new Hapi.Server({
+    debug: {
+      request: ['error']
+    },
+    port: 8080
+  });
+  server.auth.scheme('theLocalScheme', () => ({
+    authenticate(request, h) {
+      throw boom.unauthorized();
+    }
+  }));
+  server.auth.strategy('local', 'theLocalScheme');
+  await server.register({
+    plugin: require('../'),
+    options: {
+      docsEndpoint: '/docsEndpoint',
+      docsEndpointConfig: {
+        auth: 'local'
+      }
+    }
+  });
+  server.route({
+    method: 'POST',
+    path: '/appian',
+    handler(request, h) {
+      return request.auth;
+    }
+  });
+  const response = await server.inject({ method: 'get', url: '/docsEndpoint' });
+  t.equal(response.statusCode, 401, 'strategy blocks access');
   t.end();
 });
 
