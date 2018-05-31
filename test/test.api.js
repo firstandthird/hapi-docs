@@ -500,6 +500,9 @@ test('server.docs.html() returns html table of both routes and methods', async (
   });
   const topLevel = () => { 'hi there'; };
   topLevel.description = 'a method';
+  topLevel.schema = Joi.object({
+    param1: Joi.string().required()
+  });
   server.method('topLevel', topLevel);
   server.method('sum', () => { 'hi there'; }, { cache: { expiresIn: 2000, generateTimeout: 100 } });
   server.auth.scheme('theDefaultScheme', () => ({
@@ -521,6 +524,9 @@ test('server.docs.html() returns html table of both routes and methods', async (
     config: {
       auth: 'local',
       validate: {
+        query: {
+          tag: Joi.string().required()
+        },
         payload: {
           name: Joi.string().required(),
           hash: Joi.string().required(),
@@ -569,6 +575,9 @@ test('options.docsEndpoint will create an endpoint for accessing server.docs.htm
   });
   const topLevel = () => { 'hi there'; };
   topLevel.description = 'a method';
+  topLevel.schema = Joi.object({
+    param1: Joi.string().required()
+  });
   server.method('topLevel', topLevel);
   server.method('sum', () => { 'hi there'; }, { cache: { expiresIn: 2000, generateTimeout: 100 } });
   server.auth.scheme('theDefaultScheme', () => ({
@@ -590,6 +599,9 @@ test('options.docsEndpoint will create an endpoint for accessing server.docs.htm
     config: {
       auth: 'local',
       validate: {
+        query: {
+          tag: Joi.string().required()
+        },
         payload: {
           name: Joi.string().required(),
           hash: Joi.string().required(),
