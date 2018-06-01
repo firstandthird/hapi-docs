@@ -4,7 +4,7 @@
   "description": "api plugin to document hapi routes",
   "main": "index.js",
   "scripts": {
-    "test": "eslint . && tap --cov test"
+    "test": "eslint . && tap --cov test/test.api.js"
   },
   "repository": {
     "type": "git",
@@ -35,7 +35,6 @@
     "extends": "firstandthird"
   },
   "dependencies": {
-    "joi": "^13.1.2",
-    "joi-describe-html": "^1.0.0"
+    "joi": "^13.1.2"
   }
 }
