@@ -717,3 +717,66 @@ test('html endpoint can also filter by tag', async (t) => {
   t.match(html.result, fs.readFileSync(path.join(__dirname, 'table2.html'), 'utf-8'));
   t.end();
 });
+
+test('server.docs.html() will sort routes and methods', async (t) => {
+  const server = new Hapi.Server({
+    debug: {
+      request: ['error']
+    },
+    port: 8080
+  });
+  await server.register({
+    plugin: require('../'),
+    options: {}
+  });
+  const topLevel = () => { 'hi there'; };
+  server.method('atopLevel', topLevel);
+  server.method('topLevel', topLevel);
+  server.method('btopLevel', topLevel);
+  server.method('sum', () => { 'hi there'; }, { cache: { expiresIn: 2000, generateTimeout: 100 } });
+  server.route({
+    method: 'GET',
+    path: '/camino',
+    handler(request, h) {
+      return 'of the jedi';
+    }
+  });
+  server.route({
+    method: 'POST',
+    path: '/appian',
+    handler(request, h) {
+      return 'of the king';
+    }
+  });
+  server.route({
+    method: 'POST',
+    path: '/bappian',
+    handler(request, h) {
+      return 'of the king';
+    }
+  });
+  server.route({
+    method: 'GET',
+    path: '/Acamino',
+    handler(request, h) {
+      return 'of the jedi';
+    }
+  });
+  server.route({
+    method: 'GET',
+    path: '/khyber',
+    handler(request, h) {
+      return 'of the jedi';
+    }
+  });
+  server.route({
+    method: 'GET',
+    path: '/gkhyber',
+    handler(request, h) {
+      return 'of the jedi';
+    }
+  });
+  const html = server.docs.html();
+  t.match(html, fs.readFileSync(path.join(__dirname, 'sortedTable.html'), 'utf-8'));
+  t.end();
+});
