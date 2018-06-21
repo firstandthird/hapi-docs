@@ -780,3 +780,30 @@ test('server.docs.html() will sort routes and methods', async (t) => {
   t.match(html, fs.readFileSync(path.join(__dirname, 'sortedTable.html'), 'utf-8'));
   t.end();
 });
+
+test('server.docs.html() will display plugins', async (t) => {
+  const server = new Hapi.Server({
+    debug: {
+      request: ['error']
+    },
+    port: 8080
+  });
+  await server.register({
+    plugin: require('../'),
+    options: {}
+  });
+  await server.register({
+    plugin: {
+      plugin: {
+        name: 'hi there',
+        once: true,
+        pkg: {},
+        register() {}
+      }
+    },
+    options: {}
+  });
+  const html = server.docs.html();
+  t.match(html, fs.readFileSync(path.join(__dirname, 'pluginTable.html'), 'utf-8'));
+  t.end();
+});
