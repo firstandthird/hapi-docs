@@ -9,6 +9,9 @@ const register = function(server, pluginOptions = {}) {
     meta = typeof pluginOptions.getMeta === 'function' ? pluginOptions.getMeta() : pluginOptions.getMeta;
   }
   server.decorate('server', 'docs', {
+    plugins() {
+      return server.registrations;
+    },
     events() {
       return Object.keys(server.events._eventListeners).reduce((memo, key) => {
         const listener = server.events._eventListeners[key];
@@ -53,7 +56,7 @@ const register = function(server, pluginOptions = {}) {
     routes(options) { return routes(server, Object.assign({}, pluginOptions, options), meta); },
     html(options = {}) {
       const routeList = server.docs.routes(options);
-      return html(server.docs.methods(), routeList, server.docs.auth(routeList), server.docs.events(), pluginOptions);
+      return html(server.docs.methods(), routeList, server.docs.auth(routeList), server.docs.events(), server.docs.plugins(), pluginOptions);
     }
   });
   if (pluginOptions.docsEndpoint) {
