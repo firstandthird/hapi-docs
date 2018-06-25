@@ -1,6 +1,7 @@
 const registerAll = require('./lib/methods');
 const routes = require('./lib/routes');
 const html = require('./lib/html');
+const decorations = require('./lib/decorations');
 
 const register = function(server, pluginOptions = {}) {
   server.decorate('server', 'docs', {
@@ -37,6 +38,7 @@ const register = function(server, pluginOptions = {}) {
       return allMethods;
     },
     routes(options) { return routes(server, Object.assign({}, pluginOptions, options)); },
+    decorations(options) { return decorations(server); },
     html(options = {}) {
       const routeList = server.docs.routes(options);
       return html(server.docs.methods(), routeList, server.docs.auth(routeList), server.docs.events(), server.docs.plugins(), pluginOptions);
