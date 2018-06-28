@@ -925,3 +925,30 @@ test('server.docs.html() will display plugins', async (t) => {
   t.match(html, fs.readFileSync(path.join(__dirname, 'pluginTable.html'), 'utf-8'));
   t.end();
 });
+
+test('server.docs.decorations() will list decorations', async (t) => {
+  const server = new Hapi.Server({
+    debug: {
+      request: ['error']
+    },
+    port: 8080
+  });
+  await server.register({
+    plugin: require('../'),
+    options: {}
+  });
+  // a mock decoration for request:
+  server.decorate('request', 'streamers', function mauve() {
+    return this;
+  });
+  const decorations = server.docs.decorations();
+  t.match(decorations, {
+    server: {
+      docs: 'plugins,events,auth,methods,decorations,routes,html'
+    },
+    request: {
+      streamers: 'mauve'
+    }
+  });
+  t.end();
+});
