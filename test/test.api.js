@@ -414,10 +414,10 @@ test('also provides list of all the registered event strategies', async (t) => {
   server.events.on('response', () => {});
   const events = server.docs.events();
   t.match(events, {
-    log: ['foo1', 'foo2'],
-    request: ['debug'],
-    response: ['(anonymous)'],
-    route: ['foo2']
+    log: { handlers: ['foo1', 'foo2'] },
+    request: { handlers: ['debug'] },
+    response: { handlers: ['(anonymous)'] },
+    route: { handlers: ['foo2'] }
   });
 });
 
@@ -483,7 +483,7 @@ test('also provides list of all the auth strategies', async (t) => {
   });
   const routes = server.docs.routes();
   const result = server.docs.auth(routes);
-  t.match(result, ['local', 'default']);
+  t.match(result, [{ name: 'local' }, { name: 'default' }]);
   t.end();
 });
 
@@ -781,6 +781,124 @@ test('server.docs.html() will sort routes and methods', async (t) => {
   t.end();
 });
 
+test('augment info with getMeta object if provided', async (t) => {
+  const server = new Hapi.Server({
+    debug: {
+      request: ['error']
+    },
+    port: 8080
+  });
+  server.auth.scheme('theDefaultScheme', () => ({
+    authenticate(request, h) {
+      return h.authenticated({ credentials: { user: 'tron' } });
+    }
+  }));
+  server.auth.strategy('default', 'theDefaultScheme');
+  server.auth.default('default');
+  server.auth.scheme('theLocalScheme', () => ({
+    authenticate(request, h) {
+      return h.authenticated({ credentials: { user: 'tron' } });
+    }
+  }));
+  server.auth.strategy('local', 'theLocalScheme');
+  server.method('api.create', () => {});
+  server.route({
+    path: '/some/{name}/page',
+    method: 'get',
+    handler(request, h) {
+      return 'return';
+    }
+  });
+  await server.register({
+    plugin: require('../'),
+    options: {
+      getMeta: {
+        routes: {
+          '/some/{name}/page': {
+            description: 'really this is a good route',
+            tags: ['meta']
+          }
+        },
+        methods: {
+          'api.create': {
+            description: 'a meta description',
+            tags: ['meta']
+          }
+        },
+        events: {
+          response: {
+            description: 'triggered when a route responds to a request'
+          }
+        },
+        strategies: {
+          local: {
+            description: 'lets everyone in'
+          },
+          default: {
+            description: 'nobody gets in'
+          }
+        }
+      }
+    }
+  });
+  const foo1 = () => {};
+  const foo2 = () => {};
+  server.events.on('log', foo1);
+  server.events.on('log', foo2);
+  server.events.on('route', foo2);
+  server.events.on('response', () => {});
+  const events = server.docs.events();
+  const routes = server.docs.routes();
+  const auth = server.docs.auth(routes);
+  const methods = server.docs.methods();
+  t.match(events, {
+    log: { handlers: ['foo1', 'foo2'] },
+    request: { handlers: ['debug'] },
+    response: { handlers: ['(anonymous)'], description: 'triggered when a route responds to a request' },
+    route: { handlers: ['foo2'] }
+  });
+  t.match(auth, [{ name: 'default', description: 'nobody gets in' }]);
+  t.match(methods, [{
+    name: 'api.create',
+    description: 'a meta description',
+    tags: ['meta']
+  }]);
+  t.match(routes, [{
+    path: '/some/{name}/page',
+    method: 'get',
+    description: 'really this is a good route',
+    tags: ['meta']
+  }]);
+});
+
+test('getMeta can also be a function that returns an object', async (t) => {
+  const server = new Hapi.Server({
+    debug: {
+      request: ['error']
+    },
+    port: 8080
+  });
+  server.events.on('response', () => {});
+  await server.register({
+    plugin: require('../'),
+    options: {
+      getMeta() {
+        return {
+          events: {
+            response: {
+              description: 'triggered when a route responds to a request'
+            }
+          }
+        };
+      }
+    }
+  });
+  const events = server.docs.events();
+  t.match(events, {
+    response: { handlers: ['(anonymous)'], description: 'triggered when a route responds to a request' },
+  });
+});
+
 test('server.docs.html() will display plugins', async (t) => {
   const server = new Hapi.Server({
     debug: {
@@ -826,7 +944,7 @@ test('server.docs.decorations() will list decorations', async (t) => {
   const decorations = server.docs.decorations();
   t.match(decorations, {
     server: {
-      docs: 'plugins,events,auth,methods,routes,decorations,html'
+      docs: 'plugins,events,auth,methods,decorations,routes,html'
     },
     request: {
       streamers: 'mauve'

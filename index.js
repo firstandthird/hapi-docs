@@ -4,6 +4,11 @@ const html = require('./lib/html');
 const decorations = require('./lib/decorations');
 
 const register = function(server, pluginOptions = {}) {
+  let meta = {};
+  // getMeta will be either an object or a function that returns an object
+  if (pluginOptions.getMeta) {
+    meta = typeof pluginOptions.getMeta === 'function' ? pluginOptions.getMeta() : pluginOptions.getMeta;
+  }
   server.decorate('server', 'docs', {
     plugins() {
       return server.registrations;
@@ -12,10 +17,13 @@ const register = function(server, pluginOptions = {}) {
       return Object.keys(server.events._eventListeners).reduce((memo, key) => {
         const listener = server.events._eventListeners[key];
         if (listener.handlers) {
-          memo[key] = [];
+          memo[key] = { handlers: [] };
           listener.handlers.forEach(handler => {
-            memo[key].push(handler.listener.name || '(anonymous)');
+            memo[key].handlers.push(handler.listener.name || '(anonymous)');
           });
+          if (meta.events && meta.events[key]) {
+            Object.assign(memo[key], meta.events[key]);
+          }
         }
         return memo;
       }, {});
@@ -25,7 +33,11 @@ const register = function(server, pluginOptions = {}) {
         if (item.auth && item.auth.strategies) {
           item.auth.strategies.forEach(strat => {
             if (!memo.includes(strat)) {
-              memo.push(strat);
+              const data = { name: strat };
+              if (meta.strategies && meta.strategies[strat]) {
+                Object.assign(data, meta.strategies[strat]);
+              }
+              memo.push(data);
             }
           });
         }
@@ -35,10 +47,15 @@ const register = function(server, pluginOptions = {}) {
     methods() {
       const allMethods = [];
       registerAll(allMethods, server.methods);
+      allMethods.forEach(method => {
+        if (meta.methods && meta.methods[method.name]) {
+          Object.assign(method, meta.methods[method.name]);
+        }
+      });
       return allMethods;
     },
-    routes(options) { return routes(server, Object.assign({}, pluginOptions, options)); },
     decorations() { return decorations(server); },
+    routes(options) { return routes(server, Object.assign({}, pluginOptions, options), meta); },
     html(options = {}) {
       const routeList = server.docs.routes(options);
       return html(server.docs.methods(), routeList, server.docs.auth(routeList), server.docs.events(), server.docs.plugins(), pluginOptions);
