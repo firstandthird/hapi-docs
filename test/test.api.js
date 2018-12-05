@@ -416,7 +416,7 @@ test('also provides list of all the registered event strategies', async (t) => {
   t.match(events, {
     log: { handlers: ['foo1', 'foo2'] },
     request: { handlers: ['debug'] },
-    response: { handlers: ['(anonymous)'] },
+    response: { handlers: ['response (anonymous)'] },
     route: { handlers: ['foo2'] }
   });
 });
@@ -854,7 +854,7 @@ test('augment info with getMeta object if provided', async (t) => {
   t.match(events, {
     log: { handlers: ['foo1', 'foo2'] },
     request: { handlers: ['debug'] },
-    response: { handlers: ['(anonymous)'], description: 'triggered when a route responds to a request' },
+    response: { handlers: ['response (anonymous)'], description: 'triggered when a route responds to a request' },
     route: { handlers: ['foo2'] }
   });
   t.match(auth, [{ name: 'default', description: 'nobody gets in' }]);
@@ -895,7 +895,7 @@ test('getMeta can also be a function that returns an object', async (t) => {
   });
   const events = server.docs.events();
   t.match(events, {
-    response: { handlers: ['(anonymous)'], description: 'triggered when a route responds to a request' },
+    response: { handlers: ['response (anonymous)'], description: 'triggered when a route responds to a request' },
   });
 });
 
