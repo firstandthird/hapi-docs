@@ -18,7 +18,7 @@ const register = function(server, pluginOptions = {}) {
         if (listener.handlers) {
           memo[key] = { handlers: [] };
           listener.handlers.forEach(handler => {
-            memo[key].handlers.push(handler.listener.name || '(anonymous)');
+            memo[key].handlers.push(handler.listener.name || `${key} (anonymous)`);
           });
           if (meta.events && meta.events[key]) {
             Object.assign(memo[key], meta.events[key]);
