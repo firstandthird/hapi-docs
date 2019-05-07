@@ -24,17 +24,17 @@
   },
   "homepage": "https://github.com/firstandthird/hapi-docs#readme",
   "devDependencies": {
-    "boom": "^7.1.1",
-    "eslint": "^4.15.0",
+    "boom": "^7.3.0",
+    "eslint": "^5.16.0",
     "eslint-config-firstandthird": "^4.3.0",
-    "eslint-plugin-import": "^2.8.0",
-    "hapi": "^17.2.0",
-    "tap": "^11.0.1"
+    "eslint-plugin-import": "^2.17.2",
+    "hapi": "^18.1.0",
+    "tap": "^13.1.2"
   },
   "eslintConfig": {
     "extends": "firstandthird"
   },
   "dependencies": {
-    "joi": "^13.1.2"
+    "joi": "^14.3.1"
   }
 }
